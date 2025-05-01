@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Bird Game</title>
+  <style>
+    /* ===== Reset & Body ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* ===== Home Screen ===== */
+    #homepage {
+      position: relative;
+      width: 360px; height: 640px;
+      background: url('https://i.postimg.cc/Lssm4MsH/homepage-2.png') no-repeat center/cover;
+      background-size: 100% 100%;
+    }
+    #homeButtons {
+      position: absolute;
+      top: 70%; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; gap: 12px; width: 80%;
+    }
+    #homeButtons button {
+      background: transparent; border: 2px solid #fff;
+      color: #fff; font-size: 18px; font-weight: bold;
+      padding: 6px 0; border-radius: 6px; cursor: pointer;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+
+    /* ===== Game Screen ===== */
+    #gameScreen {
+      position: relative; width: 360px; height: 640px;
+      margin: 20px auto; overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      background: url('https://i.postimg.cc/1RDTnY2w/in-game-bg.png') no-repeat center/cover;
+      background-size: 100% 100%; display: none;
+    }
+    #gameCanvas { display: block; width:100%; height:100%; }
+    #score, #coinCount {
+      position: absolute; top:10px; color:#fff; font-size:18px;
+      pointer-events:none; text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    #score { left:10px; }
+    #coinCount { right:10px; }
+    #compliment {
+      position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,0.7); color:#fff; padding:4px 8px;
+      border-radius:4px; font-size:22px; opacity:0.8; display:none;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+
+    /* ===== Game Over ===== */
+    #gameOverScreen {
+      position:absolute; top:20px; left:50%; transform:translateX(-50%);
+      width:360px; height:640px;
+      background: url('https://i.postimg.cc/507gcLR4/game-end.png') no-repeat center/cover;
+      background-size:100% 100%; display:none;
+      justify-content:center; align-items:center;
+      flex-direction:column; text-align:center; z-index:10;
+    }
+    #gameOverScreen > * { margin:8px 0; }
+    #scoreDisplay { color:#fff; font-size:48px; }
+    #playAgainButton, #returnHomeButton {
+      width:180px; height:50px; border:none; cursor:pointer;
+    }
+    #playAgainButton {
+      background: url('https://i.postimg.cc/HxrxJnqB/play-again-button.png') no-repeat center/cover;
+    }
+    #returnHomeButton {
+      background:transparent; border:2px solid #fff;
+      color:#fff; font-size:18px; font-weight:bold; border-radius:6px;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+
+    /* ===== High Score ===== */
+    #highScoreScreen {
+      position:absolute; top:20px; left:50%; transform:translateX(-50%);
+      width:360px; height:640px;
+      background: url('https://i.postimg.cc/LXxVLLkd/Highscore.png') no-repeat center/cover;
+      background-size:100% 100%; display:none;
+      justify-content:center; align-items:center;
+      flex-direction:column; text-align:center; z-index:10;
+    }
+    #highScoreScreen > * { margin:8px 0; }
+    #highScoreDisplay {
+      color:#fff; font-size:48px; font-weight:bold;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    #hsReturnButton {
+      width:180px; height:50px;
+      background:transparent; border:2px solid #fff;
+      color:#fff; font-size:18px; font-weight:bold; border-radius:6px;
+      cursor:pointer; text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+
+    /* ===== Store ===== */
+    #storeScreen {
+      position:absolute; top:20px; left:50%; transform:translateX(-50%);
+      width:360px; height:640px;
+      background: url('https://i.postimg.cc/gk9TdwqY/store-renewed.png') no-repeat center/cover;
+      background-size:100% 100%; display:none; z-index:10;
+    }
+    #storeBackButton {
+      position:absolute; top:10px; left:10px;
+      background:transparent; border:2px solid #fff;
+      color:#fff; font-size:16px; font-weight:bold;
+      padding:4px 8px; border-radius:6px; cursor:pointer;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    #totalCoinsDisplay {
+      position:absolute; top:10px; right:10px;
+      color:#fff; font-size:18px; font-weight:bold;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    #storeMessage {
+      position:absolute; top:60px; left:50%; transform:translateX(-50%);
+      color:red; font-size:20px; font-weight:bold;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+      display:none;
+    }
+    .storeGrid {
+      position:absolute; top:200px; left:50%; transform:translateX(-50%);
+      width:90%; display:grid;
+      grid-template-columns: repeat(2,1fr);
+      grid-auto-rows:auto; column-gap:5%; row-gap:40px;
+    }
+    .storeItem { text-align:center; }
+    .storeItem img { width:80px; height:80px; margin-bottom:6px; }
+    .storeItem .name, .storeItem .price {
+      color:#fff; font-size:18px; margin:4px 0;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    .storeItem button {
+      display:block; margin:4px auto;
+      background:transparent; font-size:16px; font-weight:bold;
+      padding:6px 12px; border-radius:6px; cursor:pointer;
+      text-shadow:0 0 5px rgba(0,0,0,0.5);
+    }
+    #selectBlueButton     { border:2px solid #0cf; color:#0cf; }
+    #buyKokilButton, #selectKokilButton { border:2px solid #f90; color:#f90; }
+    #buyMurgiButton,  #selectMurgiButton { border:2px solid #0f0; color:#0f0; }
+    button:disabled { border-color:#555; color:#555; cursor:not-allowed; }
+    #blueItem {
+      grid-column: 1 / -1; justify-self: center; margin-top: -20%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Home Screen -->
+  <div id="homepage">
+    <div id="homeButtons">
+      <button onclick="startGame()">Play Game</button>
+      <button onclick="showHighScore()">High Score</button>
+      <button onclick="showStore()">Store</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen">
+    <canvas id="gameCanvas" width="480" height="480"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="coinCount">Coins: 0</div>
+    <div id="compliment"></div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div id="gameOverScreen">
+    <div id="scoreDisplay">Score: 0</div>
+    <button id="playAgainButton" onclick="startGame()"></button>
+    <button id="returnHomeButton" onclick="returnHome()">Home</button>
+  </div>
+
+  <!-- High Score Screen -->
+  <div id="highScoreScreen">
+    <div id="highScoreDisplay">High Score: 0</div>
+    <button id="hsReturnButton" onclick="returnHome()">Home</button>
+  </div>
+
+  <!-- Store Screen -->
+  <div id="storeScreen">
+    <button id="storeBackButton" onclick="returnHome()">Back</button>
+    <div id="totalCoinsDisplay">Total Coins: 0</div>
+    <div id="storeMessage"></div>
+    <div class="storeGrid">
+      <div id="kokilItem" class="storeItem">
+        <img src="https://i.postimg.cc/8532Qtw4/kokil-store.png" alt="Dushtu Kokil">
+        <div class="name">Dushtu Kokil</div>
+        <div class="price">Price: 350</div>
+        <button id="buyKokilButton" onclick="buyKokil()">Buy</button>
+        <button id="selectKokilButton" onclick="selectBird('kokil')">Select</button>
+      </div>
+      <div id="murgiItem" class="storeItem">
+        <img src="https://i.postimg.cc/wMqgbtGQ/murgi.png" alt="Farm er Murgi">
+        <div class="name">Farm er Murgi</div>
+        <div class="price">Price: 250</div>
+        <button id="buyMurgiButton" onclick="buyMurgi()">Buy</button>
+        <button id="selectMurgiButton" onclick="selectBird('murgi')">Select</button>
+      </div>
+      <div id="blueItem" class="storeItem">
+        <img src="https://i.postimg.cc/1zmnwt9w/original-blue.png" alt="Blue">
+        <div class="name">Blue</div>
+        <div class="price">Free</div>
+        <button id="selectBlueButton" onclick="selectBird('blue')">Select</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- load the game script -->
+  <script src="game.js"></script>
+</body>
+</html>
